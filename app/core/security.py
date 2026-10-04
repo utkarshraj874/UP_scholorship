@@ -16,6 +16,10 @@ from app.core.config import (
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="login"# Creates an OAuth2 authentication scheme , it tells fastapi, that client can obtain a token byb calling "/login"
 )
+oauth2_scheme_optional = OAuth2PasswordBearer(
+    tokenUrl="login",
+    auto_error=False
+)
 
 pwd_context = CryptContext(
     schemes = ["argon2"],

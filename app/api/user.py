@@ -16,7 +16,7 @@ from app.core.security import verify_password
 from app.core.security import pwd_context
 from fastapi.security import OAuth2PasswordRequestForm
 from email_validator import validate_email, EmailNotValidError
-
+from app.core.dependencies import get_current_user
 from app.core.security import create_acess_token, verify_acess_token
 
 router = APIRouter()
@@ -71,26 +71,43 @@ async def register(
 # def login(request: LoginRequest, db: Session = Depends(get_db)):
 
 
+from fastapi import Request
+
 @router.post("/login")
 async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),# it is special class provided by  fastapi,
-    db: Session = Depends(get_db)                    # it expect data like username and password in form data not json 
-):                                                   # we call also wirte directly username: str, password: str
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    content_type = request.headers.get("content-type", "")
+    username = None
+    password = None
 
-    db_user = db.query(User).filter(
-        User.email == form_data.username
-    ).first()
+    if "application/json" in content_type:
+        try:
+            body = await request.json()
+            username = body.get("email") or body.get("username")
+            password = body.get("password")
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid JSON body")
+    else:
+        try:
+            form_data = await request.form()
+            username = form_data.get("username") or form_data.get("email")
+            password = form_data.get("password")
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid form data")
 
-    if not db_user:
+    if not username or not password:
         raise HTTPException(
-            status_code=401,
-            detail="Invalid credentials"
+            status_code=400,
+            detail="Email/username and password are required"
         )
 
-    if not verify_password(
-        form_data.password,
-        db_user.password
-    ):
+    db_user = db.query(User).filter(
+        User.email == str(username).strip()
+    ).first()
+
+    if not db_user or not verify_password(str(password), db_user.password):
         raise HTTPException(
             status_code=401,
             detail="Invalid credentials"
@@ -104,18 +121,23 @@ async def login(
 
     return {
         "access_token": access_token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "user": {
+            "id": db_user.id,
+            "name": db_user.name,
+            "email": db_user.email
+        }
     }
 
 @router.get("/me")
 async def read_me(
-    current_user:User = Depends(
-        get_current_user
-        )
+    current_user: User = Depends(get_current_user)
 ):
     return {
-        "id":current_user.id,
-        "email":current_user.email
+        "id": current_user.id,
+        "name": current_user.name,
+        "email": current_user.email
     }
+
 
 
