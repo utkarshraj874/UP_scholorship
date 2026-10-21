@@ -1,7 +1,10 @@
 import uuid
+#used to generate unique id 
 from pathlib import Path
+#helps work with file name and extension 
 
 from fastapi import UploadFile
+#represents an uploaded file in FastAPI
 from sqlalchemy.orm import Session
 
 from app.models.documents import Document
@@ -30,11 +33,13 @@ def create_storage_path(
     filename: str,
 ):
     extension = Path(filename).suffix.lower()
+    #extracts the file extension(.pdf,.jpg,etc) from the original filename and converts it to lowercase
 
     unique_name = f"{uuid.uuid4()}{extension}"
-
+    #create a random unique filename using uuid4 and append the original file extension to it
+    #eg:-7fea23aede.pdf
     return f"users/{user_id}/{category}/{unique_name}"
-
+    #users/1/pan/7f9a23de.pdf
 
 async def create_document(
     db: Session,
@@ -174,7 +179,9 @@ def get_document_url(
         document.file_path
     )
 
-
+   #here we have calling the update_document function which is callled before definng , this works in python bcz .
+   #when file is executed python interpreter reads the whole file and then executes the code, 
+   # so it can find the function definition even if it is defined after the call.
 async def update_document(
     db: Session,
     user_id: int,
