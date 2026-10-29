@@ -2,7 +2,6 @@
 
 Portal designed by the **Scholarship Coordinator of IIIT Ranchi** to assist peers and juniors in form fill-up, managing academic records, and uploading the 9 mandatory UP Scholarship documents.
 
----
 
 ## 🚀 Completed Modules & Capabilities
 
